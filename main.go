@@ -36,9 +36,14 @@ var (
 func main() {
 	iphost := flag.String("l", "127.0.0.1:5345", "listen DNS UDP port")
 	fbsrv := flag.String("fb", "127.0.0.1:53", "fallback to DNS UDP port")
+	debug := flag.Bool("d", false, "show debuf log")
 	flag.BoolVar(&forcefb, "ffb", false, "force using fallback")
 	frag := flag.Uint("frag", 3, "TLS first fragemt size")
 	flag.Parse()
+
+	if *debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 
 	if frag != nil {
 		terasu.DefaultFirstFragmentLen = uint8(*frag)
