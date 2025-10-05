@@ -17,6 +17,7 @@ import (
 	"github.com/fumiama/orbyte/pbuf"
 	"github.com/fumiama/terasu"
 	"github.com/fumiama/terasu/dns"
+	"github.com/fumiama/terasu/ip"
 	"github.com/sirupsen/logrus"
 )
 
@@ -38,6 +39,7 @@ func main() {
 	fbsrv := flag.String("fb", "127.0.0.1:53", "fallback to DNS UDP port")
 	debug := flag.Bool("d", false, "show debug log")
 	flag.BoolVar(&forcefb, "ffb", false, "force using fallback")
+	flag.BoolVar(&ip.IsIPv6Available, "6", false, "use ipv6 servers")
 	frag := flag.Uint("frag", 3, "TLS first fragemt size (0 to disable)")
 	flag.Parse()
 
@@ -57,6 +59,8 @@ func main() {
 		fallback = net.UDPAddrFromAddrPort(addrport)
 		logrus.Infoln("Set fallback server to", fallback)
 	}
+
+	logrus.Infoln("Use ipv6 servers:", ip.IsIPv6Available)
 
 	addrport, err := netip.ParseAddrPort(*iphost)
 	if err != nil {
