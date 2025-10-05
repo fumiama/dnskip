@@ -38,7 +38,7 @@ func main() {
 	fbsrv := flag.String("fb", "127.0.0.1:53", "fallback to DNS UDP port")
 	debug := flag.Bool("d", false, "show debug log")
 	flag.BoolVar(&forcefb, "ffb", false, "force using fallback")
-	frag := flag.Uint("frag", 3, "TLS first fragemt size")
+	frag := flag.Uint("frag", 3, "TLS first fragemt size (0 to disable)")
 	flag.Parse()
 
 	if *debug {
