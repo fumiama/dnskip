@@ -7,8 +7,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fumiama/orbyte v0.0.0-20251002065953-3bb358367eb5 h1:j9o0XVvdAeLwrBYMnh0SerrMc9CgNU6AGszbsvFzoc0=
 github.com/fumiama/orbyte v0.0.0-20251002065953-3bb358367eb5/go.mod h1:FOjdw7KdCbK2eH3gRPhwFNCoXKpu9sN5vPH4El/8e0c=
-github.com/fumiama/terasu v0.0.0-20251005163826-812043a905ad h1:aWqnr41OKNKA8PU6g38SuaIlfcxnDm/5jHX4jZeqClw=
-github.com/fumiama/terasu v0.0.0-20251005163826-812043a905ad/go.mod h1:ltlQhbPE0423K0bNQxJdhtkYgFxXstUobc8k+9LFY88=
+github.com/fumiama/terasu v0.0.0-20251005171729-614a6d88d447 h1:KwdDi4brFCEp/l6qzEsFvEweRupytks8NTgs95b/8a4=
+github.com/fumiama/terasu v0.0.0-20251005171729-614a6d88d447/go.mod h1:ltlQhbPE0423K0bNQxJdhtkYgFxXstUobc8k+9LFY88=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
