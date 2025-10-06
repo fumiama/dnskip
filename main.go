@@ -38,6 +38,7 @@ func main() {
 	iphost := flag.String("l", "127.0.0.1:5345", "listen DNS UDP port")
 	fbsrv := flag.String("fb", "127.0.0.1:53", "fallback to DNS UDP port")
 	debug := flag.Bool("d", false, "show debug log")
+	timeout := flag.Uint("to", 4, "dial timeout in sec")
 	flag.BoolVar(&forcefb, "ffb", false, "force using fallback")
 	flag.BoolVar(&ip.IsIPv6Available, "6", false, "use ipv6 servers")
 	frag := flag.Uint("frag", 3, "TLS first fragemt size (0 to disable)")
@@ -59,6 +60,8 @@ func main() {
 		fallback = net.UDPAddrFromAddrPort(addrport)
 		logrus.Infoln("Set fallback server to", fallback)
 	}
+
+	dns.SetTimeout(time.Second * time.Duration(*timeout))
 
 	logrus.Infoln("Use ipv6 servers:", ip.IsIPv6Available)
 
