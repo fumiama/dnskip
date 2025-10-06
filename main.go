@@ -32,13 +32,14 @@ var (
 		})
 	fallback *net.UDPAddr
 	forcefb  bool
+	timeout  uint
 )
 
 func main() {
 	iphost := flag.String("l", "127.0.0.1:5345", "listen DNS UDP port")
 	fbsrv := flag.String("fb", "127.0.0.1:53", "fallback to DNS UDP port")
 	debug := flag.Bool("d", false, "show debug log")
-	timeout := flag.Uint("to", 4, "dial timeout in sec")
+	flag.UintVar(&timeout, "to", 4, "dial timeout in sec")
 	flag.BoolVar(&forcefb, "ffb", false, "force using fallback")
 	flag.BoolVar(&ip.IsIPv6Available, "6", false, "use ipv6 servers")
 	frag := flag.Uint("frag", 3, "TLS first fragemt size (0 to disable)")
@@ -61,7 +62,7 @@ func main() {
 		logrus.Infoln("Set fallback server to", fallback)
 	}
 
-	dns.SetTimeout(time.Second * time.Duration(*timeout))
+	dns.SetTimeout(time.Second * time.Duration(timeout))
 
 	logrus.Infoln("Use ipv6 servers:", ip.IsIPv6Available)
 
@@ -104,6 +105,8 @@ func response(cnt uint8, conn *net.UDPConn, addr *net.UDPAddr, payload pbuf.Byte
 		err     error
 		tlsconn net.Conn
 		loopcnt = 0
+		ctx     context.Context
+		cancel  context.CancelFunc
 	)
 
 	if forcefb {
@@ -114,7 +117,9 @@ func response(cnt uint8, conn *net.UDPConn, addr *net.UDPAddr, payload pbuf.Byte
 	logrus.Debugln(addr, "Run on lock", cnt)
 
 REDAIL:
-	tlsconn, err = dialtls(cnt)
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
+	defer cancel()
+	tlsconn, err = dialtls(cnt, ctx)
 	if err != nil {
 		logrus.Warnln(addr, "Dial DNS server err:", err)
 		return
@@ -238,14 +243,14 @@ func releasefree(i uint8) {
 	}
 }
 
-func dialtls(cnt uint8) (net.Conn, error) {
+func dialtls(cnt uint8, ctx context.Context) (net.Conn, error) {
 	conn := tlsconnCache.Get(cnt)
 	if conn != nil {
 		logrus.Debugln("Lock", cnt, "get cached tls conn to", conn.RemoteAddr())
 		return conn, nil
 	}
 	// dummy nw and addr
-	conn, err := dns.DefaultResolver.Dial(context.Background(), "", "")
+	conn, err := dns.DefaultResolver.Dial(ctx, "", "")
 	if err != nil {
 		return nil, err
 	}

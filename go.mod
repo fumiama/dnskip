@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/FloatTech/ttl v0.0.0-20250224045156-012b1463287d
 	github.com/fumiama/orbyte v0.0.0-20251002065953-3bb358367eb5
-	github.com/fumiama/terasu v0.0.0-20251006044146-d81a14f4444c
+	github.com/fumiama/terasu v0.0.0-20251006061017-78a388f8731c
 	github.com/sirupsen/logrus v1.9.3
 )
 
