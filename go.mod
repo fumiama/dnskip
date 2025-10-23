@@ -1,11 +1,11 @@
 module dnskip
 
-go 1.20
+go 1.22
 
 require (
 	github.com/FloatTech/ttl v0.0.0-20250224045156-012b1463287d
 	github.com/fumiama/orbyte v0.0.0-20251002065953-3bb358367eb5
-	github.com/fumiama/terasu v0.0.0-20251006080703-541b84ca4a5f
+	github.com/fumiama/terasu v1.0.0
 	github.com/sirupsen/logrus v1.9.3
 )
 
