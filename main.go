@@ -50,7 +50,7 @@ func main() {
 	}
 
 	if frag != nil {
-		terasu.DefaultFirstFragmentLen = uint8(*frag)
+		terasu.DefaultFirstFragmentLen = int(*frag)
 	}
 
 	if *fbsrv != "" {
