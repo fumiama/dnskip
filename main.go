@@ -42,7 +42,7 @@ func main() {
 	flag.UintVar(&timeout, "to", 4, "dial timeout in sec")
 	flag.BoolVar(&forcefb, "ffb", false, "force using fallback")
 	flag.BoolVar(&ip.IsIPv6Available, "6", false, "use ipv6 servers")
-	frag := flag.Uint("frag", 3, "TLS first fragemt size (0 to disable)")
+	frag := flag.Uint("frag", 4, "TLS first fragemt size (0 to disable)")
 	flag.Parse()
 
 	if *debug {
