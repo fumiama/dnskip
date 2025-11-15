@@ -1,4 +1,4 @@
-module dnskip
+module github.com/fumiama/dnskip
 
 go 1.22
 
