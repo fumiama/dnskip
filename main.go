@@ -27,16 +27,19 @@ var (
 	fallback *net.UDPAddr
 	forcefb  bool
 	timeout  uint
+	keept    uint
 )
 
 func main() {
 	iphost := flag.String("l", "127.0.0.1:5345", "listen DNS UDP port")
 	fbsrv := flag.String("fb", "127.0.0.1:53", "fallback to DNS UDP port")
 	debug := flag.Bool("d", false, "show debug log")
-	flag.UintVar(&timeout, "to", 4, "dial timeout in sec")
+	flag.UintVar(&timeout, "to", 4, "dial timeout in sec, >= 1")
+	flag.UintVar(&keept, "kt", 4, "tls conn keep time in min, >= 1")
 	flag.BoolVar(&forcefb, "ffb", false, "force using fallback")
 	flag.BoolVar(&ip.IsIPv6Available, "6", false, "use ipv6 servers")
 	frag := flag.Uint("frag", 4, "TLS first fragemt size (0 to disable)")
+	sz := flag.Uint("sz", 2, "tls conn pool size")
 	flag.Parse()
 
 	if *debug {
@@ -55,6 +58,33 @@ func main() {
 		fallback = net.UDPAddrFromAddrPort(addrport)
 		logrus.Infoln("Set fallback server to", fallback)
 	}
+
+	if *sz <= 0 || *sz > 32 {
+		logrus.Fatal("-sz must between [1, 32]")
+	}
+	remoconn = make([]*tls.Conn, *sz)
+
+	if timeout <= 0 {
+		timeout = 1
+	}
+
+	if keept <= 0 {
+		keept = 1
+	}
+
+	go func() {
+		t := time.NewTicker(time.Second * 10)
+		defer t.Stop()
+		c := 0
+		for range t.C {
+			c++
+			o, i := pbuf.CountItems()
+			logrus.Infoln("Orbyte pbuf outside:", o, "inside:", i)
+			if c%8 == 0 {
+				runtime.GC()
+			}
+		}
+	}()
 
 	dns.SetTimeout(time.Second * time.Duration(timeout))
 
@@ -159,10 +189,7 @@ REDAIL:
 		return
 	}
 	logrus.Warnln(addr, "Proxy to DNS server err:", err)
-	atomic.StorePointer(
-		(*unsafe.Pointer)(unsafe.Pointer(&remoconn)),
-		unsafe.Pointer(nil),
-	)
+	marktlsfail(cnt)
 	loopcnt++
 	if loopcnt < 2 {
 		goto REDAIL
@@ -221,7 +248,7 @@ var (
 // lockfree is spin update
 func lockfree() uint8 {
 	old := atomic.LoadUint32(&freeconn)
-	for i := uint8(0); i < uint8(unsafe.Sizeof(uintptr(0)))*8; i++ {
+	for i := uint8(0); i < uint8(unsafe.Sizeof(freeconn))*8; i++ {
 		for old&(1<<i) == 0 { // is free
 			ok := atomic.CompareAndSwapUint32(&freeconn, old, old|(1<<i))
 			if ok {
@@ -249,22 +276,23 @@ func releasefree(i uint8) {
 }
 
 var (
-	remoconn *tls.Conn
+	remoconn []*tls.Conn
 	connmu   sync.Mutex
 )
 
 func dialtls(cnt uint8, ctx context.Context) (*tls.Conn, func(), error) {
-	conn := (*tls.Conn)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&remoconn))))
+	idx := cnt % uint8(len(remoconn))
+	conn := (*tls.Conn)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&remoconn[idx]))))
 	if conn != nil {
-		logrus.Debugln("Thread", cnt, "get cached tls conn to", conn.RemoteAddr())
+		logrus.Debugln("Thread", cnt, "idx", idx, "get cached tls conn to", conn.RemoteAddr())
 		connmu.Lock()
 		return conn, connmu.Unlock, nil
 	}
 	// slow path
 	connmu.Lock()
-	conn = (*tls.Conn)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&remoconn))))
+	conn = (*tls.Conn)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&remoconn[idx]))))
 	if conn != nil {
-		logrus.Debugln("Thread", cnt, "slowly get cached tls conn to", conn.RemoteAddr())
+		logrus.Debugln("Thread", cnt, "idx", idx, "slowly get cached tls conn to", conn.RemoteAddr())
 		return conn, connmu.Unlock, nil
 	}
 	// dummy nw and addr
@@ -275,13 +303,23 @@ func dialtls(cnt uint8, ctx context.Context) (*tls.Conn, func(), error) {
 	}
 	conn = connintf.(*tls.Conn)
 	atomic.StorePointer(
-		(*unsafe.Pointer)(unsafe.Pointer(&remoconn)),
+		(*unsafe.Pointer)(unsafe.Pointer(&remoconn[idx])),
 		unsafe.Pointer(conn),
 	)
-	runtime.SetFinalizer(conn, func(conn *tls.Conn) {
-		logrus.Warnln("Cleanup unused conn to", conn.RemoteAddr())
-		_ = conn.Close()
-	})
-	logrus.Debugln("Thread", cnt, "set new tls conn to", conn.RemoteAddr())
+	logrus.Infoln("Thread", cnt, "idx", idx, "set new tls conn to", conn.RemoteAddr())
+	time.AfterFunc(time.Minute*time.Duration(keept), func() { marktlsfail(cnt) })
 	return conn, connmu.Unlock, nil
+}
+
+func marktlsfail(cnt uint8) {
+	idx := cnt % uint8(len(remoconn))
+	logrus.Infoln("Thread", cnt, "idx", idx, "reset conn to nil")
+	oldConn := (*tls.Conn)(atomic.SwapPointer(
+		(*unsafe.Pointer)(unsafe.Pointer(&remoconn[idx])),
+		unsafe.Pointer(nil),
+	))
+	if oldConn != nil {
+		logrus.Infoln("Thread", cnt, "idx", idx, "close conn to", oldConn.RemoteAddr())
+		_ = oldConn.Close()
+	}
 }
