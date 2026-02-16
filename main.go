@@ -18,7 +18,9 @@ import (
 
 	"github.com/fumiama/orbyte/pbuf"
 	"github.com/fumiama/terasu"
+	"github.com/fumiama/terasu/dialer"
 	"github.com/fumiama/terasu/dns"
+	_ "github.com/fumiama/terasu/ext"
 	"github.com/fumiama/terasu/ip"
 	"github.com/sirupsen/logrus"
 )
@@ -86,7 +88,7 @@ func main() {
 		}
 	}()
 
-	dns.SetTimeout(time.Second * time.Duration(timeout))
+	dialer.SetDefaultTimeout(time.Second * time.Duration(timeout))
 
 	logrus.Infoln("Use ipv6 servers:", ip.IsIPv6Available)
 
