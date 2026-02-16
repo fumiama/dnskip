@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/fumiama/orbyte v0.0.0-20251002065953-3bb358367eb5
-	github.com/fumiama/terasu v1.0.3
+	github.com/fumiama/terasu v1.0.4
 	github.com/sirupsen/logrus v1.9.4
 )
 
