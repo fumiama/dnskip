@@ -10,6 +10,7 @@ import (
 	"math"
 	"net"
 	"net/netip"
+	"os"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -87,6 +88,13 @@ func main() {
 			}
 		}
 	}()
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		logrus.Fatal("Getwd err:", err)
+	}
+
+	logrus.Infoln("Running at dir", pwd)
 
 	dialer.SetDefaultTimeout(time.Second * time.Duration(timeout))
 
