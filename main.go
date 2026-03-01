@@ -81,7 +81,7 @@ func main() {
 		for range t.C {
 			c++
 			o, i := pbuf.CountItems()
-			logrus.Infoln("Orbyte pbuf outside:", o, "inside:", i)
+			logrus.Debugln("Orbyte pbuf outside:", o, "inside:", i)
 			if c%8 == 0 {
 				runtime.GC()
 			}
